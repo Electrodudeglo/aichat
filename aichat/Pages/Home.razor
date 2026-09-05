@@ -1,7 +1,96 @@
-﻿@page "/"
+@page "/"
 
 <PageTitle>Home</PageTitle>
 
-<p class="underline">
-    Tailwind is working!
-</p>
+<div class="flex h-[85vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-2xl">
+
+    <div class="flex items-center gap-3 border-b border-white/10 px-5 py-4">
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+            ✨
+        </div>
+        <div>
+            <p class="text-sm font-semibold text-gray-100">AI Assistant</p>
+            <p class="text-xs text-gray-500">Online</p>
+        </div>
+    </div>
+
+    <div class="flex-1 space-y-4 overflow-y-auto px-5 py-6">
+        @foreach (var message in messages)
+        {
+            <div class="flex items-end gap-2 @(message.Role == ChatRole.User ? "flex-row-reverse" : "")">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-medium @(message.Role == ChatRole.User ? "bg-sky-500/15 text-sky-300" : "bg-emerald-500/15 text-emerald-300")">
+                    @(message.Role == ChatRole.User ? "U" : "AI")
+                </div>
+                <div class="max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap @(message.Role == ChatRole.User ? "rounded-br-sm bg-emerald-600 text-white" : "rounded-bl-sm bg-white/5 text-gray-200")">
+                    @message.Content
+                </div>
+            </div>
+        }
+
+        @if (isThinking)
+        {
+            <div class="flex items-end gap-2">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[11px] font-medium text-emerald-300">
+                    AI
+                </div>
+                <div class="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white/5 px-4 py-3">
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500"></span>
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500 [animation-delay:0.15s]"></span>
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500 [animation-delay:0.3s]"></span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="border-t border-white/10 p-4">
+        <div class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 focus-within:border-emerald-500/50">
+            <input type="text" @bind="input" @bind:event="oninput" @onkeydown="HandleKeyDown"
+                   placeholder="Message the assistant..."
+                   class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none" />
+            <button @onclick="Send" disabled="@string.IsNullOrWhiteSpace(input)"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white transition enabled:hover:bg-emerald-500 disabled:opacity-30">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                    <path d="M3.4 20.4 21 12 3.4 3.6 3 10l12 2-12 2z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private readonly List<MessageModel> messages = new()
+    {
+        new MessageModel { Role = ChatRole.Assistant, Content = "Hey! How can I help you today?" }
+    };
+
+    private string input = "";
+    private bool isThinking = false;
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return;
+        }
+
+        var text = input.Trim();
+        messages.Add(new MessageModel { Role = ChatRole.User, Content = text });
+        input = "";
+        isThinking = true;
+        StateHasChanged();
+
+        await Task.Delay(500);
+        messages.Add(new MessageModel { Role = ChatRole.Assistant, Content = $"You said: \"{text}\" — wire me up to a real model to get a real answer!" });
+        isThinking = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Send();
+        }
+    }
+}
