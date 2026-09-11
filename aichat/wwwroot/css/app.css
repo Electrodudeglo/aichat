@@ -105,6 +105,63 @@ code {
     color: #c02d76;
 }
 
+.markdown-content p {
+    margin: 0 0 0.5rem 0;
+}
+
+    .markdown-content p:last-child {
+        margin-bottom: 0;
+    }
+
+.markdown-content ul,
+.markdown-content ol {
+    margin: 0 0 0.5rem 1.25rem;
+    padding: 0;
+}
+
+.markdown-content li {
+    margin-bottom: 0.15rem;
+}
+
+.markdown-content a {
+    color: #34d399;
+    text-decoration: underline;
+}
+
+.markdown-content blockquote {
+    margin: 0 0 0.5rem 0;
+    padding-left: 0.75rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    color: rgba(229, 231, 235, 0.75);
+}
+
+.markdown-content :not(pre) > code {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f472b6;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    font-size: 0.85em;
+}
+
+.markdown-content pre {
+    margin: 0 0 0.5rem 0;
+    padding: 0.75rem 1rem;
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.6rem;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+    .markdown-content pre code {
+        background: transparent;
+        color: #e5e7eb;
+        padding: 0;
+        border-radius: 0;
+        font-size: 0.85em;
+        white-space: pre;
+    }
+
 .chat-scroll {
     scrollbar-color: #232323 #141414;
 }
