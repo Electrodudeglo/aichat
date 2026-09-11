@@ -1,0 +1,95 @@
+@page "/api-key"
+@using aichat.Services
+@inject IJSRuntime JS
+
+<PageTitle>API Key</PageTitle>
+
+<div class="rounded-2xl border border-white/10 bg-[#141414] p-6 shadow-2xl">
+    <h1 class="text-lg font-semibold text-gray-100">API Key</h1>
+    <p class="mt-2 text-sm text-gray-500">Manage the API key used to talk to the assistant.</p>
+
+    <div class="mt-4 flex w-full max-w-sm items-center gap-2">
+        <input type="password" @bind="userKey" @bind:event="oninput" disabled="@isLocked"
+               placeholder="Paste your OpenAI API key..."
+               class="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 disabled:opacity-60" />
+
+        <button @onclick="HandleSubmit" disabled="@(isChecking || (!isLocked && string.IsNullOrWhiteSpace(userKey)))"
+                class="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition disabled:opacity-30 @(isLocked ? "bg-red-600 hover:bg-red-500 text-white" : "bg-emerald-600 hover:bg-emerald-500 text-white")">
+            @(isLocked ? "Release" : "Submit")
+        </button>
+    </div>
+
+    @if (isChecking)
+    {
+        <p class="mt-2 text-xs text-gray-500">Checking key...</p>
+    }
+    else if (isKeyValid.HasValue)
+    {
+        <p class="mt-2 text-xs @(isKeyValid.Value ? "text-emerald-400" : "text-red-400")">
+            @(isKeyValid.Value ? "Key is valid and locked in." : "Key is invalid.")
+        </p>
+    }
+</div>
+
+@code {
+
+    private readonly ChatService _chatService = new();
+
+    private const string userKeyStorageKey = "user_key";
+
+    private string userKey = string.Empty;
+    private bool isChecking = false;
+    private bool isLocked = false;
+    private bool? isKeyValid = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
+
+            if (!string.IsNullOrWhiteSpace(userKey))
+            {
+                isLocked = true;
+                isKeyValid = true;
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (isLocked)
+        {
+            userKey = string.Empty;
+            isKeyValid = null;
+            isLocked = false;
+            await JS.InvokeVoidAsync("localStorage.removeItem", userKeyStorageKey);
+            return;
+        }
+
+        await ValidateAndLock();
+    }
+
+    private async Task ValidateAndLock()
+    {
+        isChecking = true;
+        isKeyValid = null;
+        StateHasChanged();
+
+        var valid = await _chatService.IsApiKeyValidAsync(userKey);
+
+        isChecking = false;
+        isKeyValid = valid;
+
+        if (valid)
+        {
+            isLocked = true;
+            await JS.InvokeVoidAsync("localStorage.setItem", userKeyStorageKey, userKey);
+        }
+
+        StateHasChanged();
+    }
+
+}

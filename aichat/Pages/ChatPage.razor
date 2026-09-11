@@ -1,0 +1,231 @@
+@page "/chat"
+@using aichat.Services
+@inject IJSRuntime JS
+@inject ChatStateService ChatState
+
+<PageTitle>Home</PageTitle>
+
+<div class="flex h-[85vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-2xl">
+
+    <div class="flex items-center gap-3 border-b border-white/10 px-5 py-4">
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+            ✨
+        </div>
+        <div>
+            <p class="text-sm font-semibold text-gray-100">AI Assistant</p>
+            <p class="text-xs text-gray-500">Online</p>
+        </div>
+    </div>
+
+    <div class="chat-scroll flex-1 space-y-4 overflow-y-auto px-5 py-6">
+        @foreach (var message in ChatState.Messages)
+        {
+            <div class="group flex items-end gap-2 @(message.Role == ChatRole.User ? "flex-row-reverse" : "")">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-medium @(message.Role == ChatRole.User ? "bg-sky-500/15 text-sky-300" : "bg-emerald-500/15 text-emerald-300")">
+                    @(message.Role == ChatRole.User ? "U" : "AI")
+                </div>
+                <div class="flex max-w-[75%] flex-col @(message.Role == ChatRole.User ? "items-end" : "items-start")">
+                    <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap @(message.Role == ChatRole.User ? "rounded-br-sm bg-emerald-600 text-white" : "rounded-bl-sm bg-white/5 text-gray-200")">
+                        @message.Content
+                    </div>
+                    <div class="mt-1 flex items-center gap-2 px-1 @(message.Role == ChatRole.User ? "flex-row-reverse" : "")">
+                        <p class="text-[10px] text-gray-500">@message.Timestamp.ToString("HH:mm")</p>
+                        @if (message.Role == ChatRole.Assistant)
+                        {
+                            <div class="flex items-center gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                <button @onclick="() => ToggleLike(message)" title="@(message.Liked ? "Unlike" : "Like")"
+                                        class="flex h-5 w-5 items-center justify-center rounded-md transition hover:bg-white/10 @(message.Liked ? "text-rose-400" : "text-gray-500 hover:text-rose-400")">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="@(message.Liked ? "currentColor" : "none")" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M 12 21 s -6.5 -4.35 -9 -8 C 0.5 9 1.5 5 5 4 c 2 -0.6 4 0.2 5 2 c 1 -1.8 3 -2.6 5 -2 c 3.5 1 4.5 5 2 10 C 16 16 13 20 12 21 z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (ChatState.IsThinking)
+        {
+            <div class="group flex items-end gap-2">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[11px] font-medium text-emerald-300">
+                    AI
+                </div>
+                <div class="flex items-center gap-2 rounded-2xl rounded-bl-sm bg-white/5 px-4 py-3">
+                    <div class="flex items-center gap-1">
+                        <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500"></span>
+                        <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500 [animation-delay:0.15s]"></span>
+                        <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500 [animation-delay:0.3s]"></span>
+                    </div>
+                    @if (showDelayedMessage)
+                    {
+                        <span class="text-[10px] text-gray-500 animate-[fadein_0.3s_ease-in]">Thinking harder...</span>
+                    }
+                    else if (showTypewriter)
+                    {
+                        <span class="text-[10px] text-gray-500">@typewriterText<span class="animate-pulse">|</span></span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="border-t border-white/10 p-4">
+        @if (string.IsNullOrWhiteSpace(userKey))
+        {
+            <p class="mb-2 text-center text-xs text-amber-400">
+                Please add an OpenAI API key on the <a href="/api-key" class="underline hover:text-amber-300">API Key page</a> to start chatting.
+            </p>
+        }
+        <div class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 focus-within:border-emerald-500/50">
+            <input type="text" @bind="input" @bind:event="oninput" @onkeydown="HandleKeyDown"
+                   disabled="@(string.IsNullOrWhiteSpace(userKey) || ChatState.IsThinking)"
+                   placeholder="Message the assistant..."
+                   class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" />
+            <button @onclick="Send" disabled="@(string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(userKey) || ChatState.IsThinking)"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white transition enabled:hover:bg-emerald-500 disabled:opacity-30">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                    <path d="M3.4 20.4 21 12 3.4 3.6 3 10l12 2-12 2z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+
+    private ChatService _chatService = new();
+
+    private const string userKeyStorageKey = "user_key";
+
+    private string userKey = string.Empty;
+
+    private string input = "";
+
+    private bool showDelayedMessage = false;
+
+    private bool showTypewriter = false;
+
+    private string typewriterText = string.Empty;
+
+    private const string ThinkingMessage = "Thinking harder...";
+
+    private static readonly TimeSpan DelayedResponseThreshold = TimeSpan.FromSeconds(3);
+
+    private static readonly TimeSpan TypewriterThreshold = TimeSpan.FromSeconds(6);
+
+    private static readonly TimeSpan TypewriterCharDelay = TimeSpan.FromMilliseconds(70);
+
+    private static readonly TimeSpan TypewriterLoopPause = TimeSpan.FromSeconds(1);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
+            StateHasChanged();
+        }
+    }
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(input) || ChatState.IsThinking)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(userKey))
+        {
+            ChatState.Messages.Add(new MessageModel { Role = ChatRole.Assistant, Content = "Please set your OpenAI API key on the API Key page first." });
+            return;
+        }
+
+        var text = input.Trim();
+
+        ChatState.Messages.Add(new MessageModel { Role = ChatRole.User,Content = text});
+        input = "";
+        ChatState.IsThinking = true;
+        showDelayedMessage = false;
+        showTypewriter = false;
+        typewriterText = string.Empty;
+        StateHasChanged();
+
+        using var delayCts = new CancellationTokenSource();
+        var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
+        var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
+
+        var response = await _chatService.OpenAiAsync(userKey,ChatState.Messages);
+
+        delayCts.Cancel();
+        await Task.WhenAll(delayedMessageTask, typewriterTask);
+
+        var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
+        ChatState.Messages.Add(new MessageModel {Role = ChatRole.Assistant,Content = reply});
+        ChatState.IsThinking = false;
+        showDelayedMessage = false;
+        showTypewriter = false;
+        typewriterText = string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task ShowDelayedMessageAfterThreshold(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(DelayedResponseThreshold, token);
+            showDelayedMessage = true;
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private async Task StartTypewriterAfterThreshold(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(TypewriterThreshold, token);
+
+            showDelayedMessage = false;
+            showTypewriter = true;
+            StateHasChanged();
+
+            while (true)
+            {
+                typewriterText = string.Empty;
+                StateHasChanged();
+
+                foreach (var ch in ThinkingMessage)
+                {
+                    typewriterText += ch;
+                    StateHasChanged();
+                    await Task.Delay(TypewriterCharDelay, token);
+                }
+
+                await Task.Delay(TypewriterLoopPause, token);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private void ToggleLike(MessageModel message)
+    {
+        message.Liked = !message.Liked;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+
+        if (e.Key == "Enter")
+        {
+            await Send();
+        }
+    }
+
+}
