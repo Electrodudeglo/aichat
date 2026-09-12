@@ -1,5 +1,5 @@
 @using aichat.Services
-@inject ChatStateService ChatState
+@inject IChatStateService ChatState
 @inject NavigationManager Navigation
 
 <aside class="@AsideClass">
@@ -67,6 +67,7 @@
     {
         ChatState.Messages.Clear();
         ChatState.IsThinking = false;
+        Navigation.NavigateTo("/chat");
         Navigation.Refresh();
         StateHasChanged();
     }
