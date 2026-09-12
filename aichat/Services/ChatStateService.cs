@@ -6,6 +6,9 @@ namespace aichat.Services
     public class ChatStateService : IChatStateService
     {
         public List<MessageModel> Messages { get; } = new();
+
+        public List<ChatCompletionUsage> Usage { get; } = new();
         public bool IsThinking { get; set; }
+
     }
 }
