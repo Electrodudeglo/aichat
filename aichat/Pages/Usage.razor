@@ -1,6 +1,5 @@
 @page "/usage"
 @using aichat.Interfaces
-@using aichat.Services
 @inject IChatStateService ChatState
 
 <PageTitle>Usage</PageTitle>
@@ -12,8 +11,36 @@
 
 <div class="rounded-2xl border border-white/10 bg-[#141414] p-6 mt-4">
 
-    
+    <p class="mb-4 text-xs text-gray-500">Showing token usage for the <span class="text-gray-300">current session</span> only. Numbers reset when you refresh or start a new session.</p>
 
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+        <div class="w-full sm:flex-1">
+            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-gray-400">Prompt Tokens</p>
+            <div class="border rounded-2xl border-white/10 bg-[#1C1C1C] p-6 shadow-2xl">
+                <p class="text-white text-center text-2xl font-semibold">550</p>
+            </div>
+        </div>
+
+        <div class="text-2xl text-gray-500 font-light select-none">+</div>
+
+        <div class="w-full sm:flex-1">
+            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-gray-400">Completion Tokens</p>
+            <div class="border rounded-2xl border-white/10 bg-[#1C1C1C] p-6 shadow-2xl">
+                <p class="text-white text-center text-2xl font-semibold">320</p>
+            </div>
+        </div>
+
+        <div class="text-2xl text-gray-500 font-light select-none">=</div>
+
+        <div class="w-full sm:flex-1">
+            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-gray-400">Total Tokens</p>
+            <div class="border rounded-2xl border-emerald-500/30 bg-[#1C1C1C] p-6 shadow-2xl">
+                <p class="text-emerald-400 text-center text-2xl font-semibold">870</p>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 @code {
