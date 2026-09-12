@@ -5,6 +5,7 @@ namespace aichat.Interfaces
     public interface IChatStateService
     {
         List<MessageModel> Messages { get; }
+        List<ChatCompletionUsage> Usage { get; }
         bool IsThinking { get; set; }
     }
 }
