@@ -2,7 +2,8 @@
 @using aichat.Services
 @using Markdig
 @inject IJSRuntime JS
-@inject ChatStateService ChatState
+@inject IChatStateService ChatState
+@inject ChatService ChatService
 
 <PageTitle>Home</PageTitle>
 
@@ -98,8 +99,6 @@
 
 @code {
 
-    private ChatService _chatService = new();
-
     private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
     private static string RenderMarkdown(string content) => Markdown.ToHtml(content, MarkdownPipeline);
@@ -162,7 +161,7 @@
         var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
         var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
 
-        var response = await _chatService.OpenAiAsync(userKey,ChatState.Messages);
+        var response = await ChatService.OpenAiAsync(userKey,ChatState.Messages);
 
         delayCts.Cancel();
         await Task.WhenAll(delayedMessageTask, typewriterTask);

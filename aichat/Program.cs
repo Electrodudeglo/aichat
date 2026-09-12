@@ -8,6 +8,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-builder.Services.AddSingleton<ChatStateService>();
+builder.Services.AddSingleton<IChatStateService, ChatStateService>();
+builder.Services.AddScoped<ChatService>(sp => new ChatService(new HttpClient()));
 
 await builder.Build().RunAsync();

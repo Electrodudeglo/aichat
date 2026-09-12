@@ -1,18 +1,20 @@
-﻿namespace aichat.Services
+namespace aichat.Services
 {
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
-    using System.Web;
     using aichat.Models;
 
     public class ChatService
     {
+        private readonly HttpClient _httpClient;
+
+        public ChatService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
 
         public async Task<ChatCompletionResponse?> OpenAiAsync(string apiKey, IEnumerable<MessageModel> messages)
         {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
             var body = new
             {
                 model = "gpt-4-turbo",
@@ -23,11 +25,16 @@
                 })
             };
 
-            var response = await client.PostAsJsonAsync("https://api.openai.com/v1/chat/completions",body);
-           
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            var response = await _httpClient.SendAsync(request);
+
             return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>();
         }
-
 
         public async Task<bool> IsApiKeyValidAsync(string apiKey)
         {
@@ -36,12 +43,12 @@
                 return false;
             }
 
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.openai.com/v1/models");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             try
             {
-                var response = await client.GetAsync("https://api.openai.com/v1/models");
+                var response = await _httpClient.SendAsync(request);
                 return response.IsSuccessStatusCode;
             }
             catch (HttpRequestException)
@@ -53,4 +60,3 @@
     }
 
 }
-
