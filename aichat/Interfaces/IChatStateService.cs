@@ -1,4 +1,4 @@
-namespace aichat.Services
+namespace aichat.Interfaces
 {
     using aichat.Models;
 
