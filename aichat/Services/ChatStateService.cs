@@ -1,5 +1,6 @@
 namespace aichat.Services
 {
+    using aichat.Interfaces;
     using aichat.Models;
 
     public class ChatStateService : IChatStateService
