@@ -168,7 +168,11 @@
         await Task.WhenAll(delayedMessageTask, typewriterTask);
 
         var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
+        var promptToken = response?.Usage?.PromptTokens ?? 0;
+        var completiontToken = response?.Usage?.CompletionTokens ?? 0;
+        var TotalToken = response?.Usage?.TotalTokens ?? 0;
         ChatState.Messages.Add(new MessageModel {Role = ChatRole.Assistant,Content = reply});
+        ChatState.Tokens.Add(new TokenUsageModel { PromptTokens = promptToken, CompletionTokens = completiontToken, TotalTokens = TotalToken });  
         ChatState.IsThinking = false;
         showDelayedMessage = false;
         showTypewriter = false;
