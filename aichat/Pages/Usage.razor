@@ -18,21 +18,21 @@
         <div class="w-full sm:flex-1">
             <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-center text-gray-400">Prompt Tokens</p>
             <div class="border rounded-2xl border-white/10 bg-[#1C1C1C] p-6 shadow-2xl">
-                <p class="text-white text-center text-2xl font-semibold">300</p>
+                <p class="text-white text-center text-2xl font-semibold">@promptTokens</p>
             </div>
         </div>
 
         <div class="w-full sm:flex-1">
             <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-center text-gray-400">Completion Tokens</p>
             <div class="border rounded-2xl border-white/10 bg-[#1C1C1C] p-6 shadow-2xl">
-                <p class="text-white text-center text-2xl font-semibold">320</p>
+                <p class="text-white text-center text-2xl font-semibold">@CompletetionTokens</p>
             </div>
         </div>
 
         <div class="w-full sm:flex-1">
             <p class="mb-2 mx-2 text-xs uppercase font-semibold tracking-wide text-center text-white">Total Tokens</p>
             <div class="border rounded-2xl border-emerald-500/30 bg-[#1C1C1C] p-6 shadow-2xl">
-                <p class="text-white text-center text-2xl font-semibold">870</p>
+                <p class="text-white text-center text-2xl font-semibold">@TotalTokens</p>
             </div>
         </div>
 
@@ -48,12 +48,13 @@
 
     private int TotalTokens = 0;
 
-    private void TokensCalculator()
+
+    protected override void OnInitialized()
     {
-        foreach(var prompt in ChatState.Tokens)
+        foreach(var token in ChatState.Tokens)
         {
-            promptTokens += prompt.PromptTokens;            
+            promptTokens += token.PromptTokens;
         }
-    }
+	}
 
 }
