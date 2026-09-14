@@ -1,6 +1,7 @@
 @page "/usage"
 @using aichat.Interfaces
 @inject IChatStateService ChatState
+@implements IDisposable
 
 <PageTitle>Usage</PageTitle>
 
@@ -51,10 +52,33 @@
 
     protected override void OnInitialized()
     {
+        ChatState.OnChange += HandleChange;
+        RecalculateTokens();
+    }
+
+    private void HandleChange()
+    {
+        RecalculateTokens();
+        StateHasChanged();
+    }
+
+    private void RecalculateTokens()
+    {
+        promptTokens = 0;
+        CompletetionTokens = 0;
+        TotalTokens = 0;
+
         foreach(var token in ChatState.Tokens)
         {
             promptTokens += token.PromptTokens;
+            CompletetionTokens += token.CompletionTokens;
+            TotalTokens += token.TotalTokens;
         }
-	}
+    }
+
+    public void Dispose()
+    {
+        ChatState.OnChange -= HandleChange;
+    }
 
 }
