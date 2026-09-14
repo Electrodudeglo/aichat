@@ -100,84 +100,84 @@
 
 @code {
 
-    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+	private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
-    private static string RenderMarkdown(string content) => Markdown.ToHtml(content, MarkdownPipeline);
+	private static string RenderMarkdown(string content) => Markdown.ToHtml(content, MarkdownPipeline);
 
-    private const string userKeyStorageKey = "user_key";
+	private const string userKeyStorageKey = "user_key";
 
-    private string userKey = string.Empty;
+	private string userKey = string.Empty;
 
-    private string input = "";
+	private string input = "";
 
-    private bool showDelayedMessage = false;
+	private bool showDelayedMessage = false;
 
-    private bool showTypewriter = false;
+	private bool showTypewriter = false;
 
-    private string typewriterText = string.Empty;
+	private string typewriterText = string.Empty;
 
-    private const string ThinkingMessage = "Thinking harder...";
+	private const string ThinkingMessage = "Thinking harder...";
 
-    private static readonly TimeSpan DelayedResponseThreshold = TimeSpan.FromSeconds(3);
+	private static readonly TimeSpan DelayedResponseThreshold = TimeSpan.FromSeconds(3);
 
-    private static readonly TimeSpan TypewriterThreshold = TimeSpan.FromSeconds(6);
+	private static readonly TimeSpan TypewriterThreshold = TimeSpan.FromSeconds(6);
 
-    private static readonly TimeSpan TypewriterCharDelay = TimeSpan.FromMilliseconds(70);
+	private static readonly TimeSpan TypewriterCharDelay = TimeSpan.FromMilliseconds(70);
 
-    private static readonly TimeSpan TypewriterLoopPause = TimeSpan.FromSeconds(1);
+	private static readonly TimeSpan TypewriterLoopPause = TimeSpan.FromSeconds(1);
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
-            StateHasChanged();
-        }
-    }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
+			StateHasChanged();
+		}
+	}
 
-    private async Task Send()
-    {
-        if (string.IsNullOrWhiteSpace(input) || ChatState.IsThinking)
-        {
-            return;
-        }
+	private async Task Send()
+	{
+		if (string.IsNullOrWhiteSpace(input) || ChatState.IsThinking)
+		{
+			return;
+		}
 
-        if (string.IsNullOrWhiteSpace(userKey))
-        {
-            ChatState.Messages.Add(new MessageModel { Role = ChatRole.Assistant, Content = "Please set your OpenAI API key on the API Key page first." });
-            return;
-        }
+		if (string.IsNullOrWhiteSpace(userKey))
+		{
+			ChatState.Messages.Add(new MessageModel { Role = ChatRole.Assistant, Content = "Please set your OpenAI API key on the API Key page first." });
+			return;
+		}
 
-        var text = input.Trim();
+		var text = input.Trim();
 
-        ChatState.Messages.Add(new MessageModel { Role = ChatRole.User,Content = text});
-        input = "";
-        ChatState.IsThinking = true;
-        showDelayedMessage = false;
-        showTypewriter = false;
-        typewriterText = string.Empty;
-        StateHasChanged();
+		ChatState.Messages.Add(new MessageModel { Role = ChatRole.User,Content = text});
+		input = "";
+		ChatState.IsThinking = true;
+		showDelayedMessage = false;
+		showTypewriter = false;
+		typewriterText = string.Empty;
+		StateHasChanged();
 
-        using var delayCts = new CancellationTokenSource();
-        var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
-        var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
+		using var delayCts = new CancellationTokenSource();
+		var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
+		var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
 
-        var response = await ChatService.OpenAiAsync(userKey,ChatState.Messages);
+		var response = await ChatService.OpenAiAsync(userKey,ChatState.Messages);
 
-        delayCts.Cancel();
-        await Task.WhenAll(delayedMessageTask, typewriterTask);
+		delayCts.Cancel();
+		await Task.WhenAll(delayedMessageTask, typewriterTask);
 
-        var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
-        var promptToken = response?.Usage?.PromptTokens ?? 0;
-        var completiontToken = response?.Usage?.CompletionTokens ?? 0;
-        var TotalToken = response?.Usage?.TotalTokens ?? 0;
-        ChatState.Messages.Add(new MessageModel {Role = ChatRole.Assistant,Content = reply});
-        ChatState.Tokens.Add(new TokenUsageModel { PromptTokens = promptToken, CompletionTokens = completiontToken, TotalTokens = TotalToken });  
-        ChatState.IsThinking = false;
-        showDelayedMessage = false;
-        showTypewriter = false;
-        typewriterText = string.Empty;
-        StateHasChanged();
+		var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
+		var promptToken = response?.Usage?.PromptTokens ?? 0;
+		var completitionToken = response?.Usage?.CompletionTokens ?? 0;
+		var TotalToken = response?.Usage?.TotalTokens ?? 0;
+		ChatState.Messages.Add(new MessageModel {Role = ChatRole.Assistant,Content = reply});
+		ChatState.Tokens.Add(new TokenUsageModel { PromptTokens = promptToken, CompletionTokens = completitionToken, TotalTokens = TotalToken });
+		ChatState.IsThinking = false;
+		showDelayedMessage = false;
+		showTypewriter = false;
+		typewriterText = string.Empty;
+		StateHasChanged();
     }
 
     private async Task ShowDelayedMessageAfterThreshold(CancellationToken token)
