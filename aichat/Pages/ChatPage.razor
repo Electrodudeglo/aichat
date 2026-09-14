@@ -173,6 +173,7 @@
 		var TotalToken = response?.Usage?.TotalTokens ?? 0;
 		ChatState.Messages.Add(new MessageModel {Role = ChatRole.Assistant,Content = reply});
 		ChatState.Tokens.Add(new TokenUsageModel { PromptTokens = promptToken, CompletionTokens = completitionToken, TotalTokens = TotalToken });
+		ChatState.NotifyStateChanged();
 		ChatState.IsThinking = false;
 		showDelayedMessage = false;
 		showTypewriter = false;
