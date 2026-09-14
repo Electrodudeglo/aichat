@@ -7,5 +7,8 @@ namespace aichat.Interfaces
         List<MessageModel> Messages { get; }
         List<TokenUsageModel> Tokens { get; }
         bool IsThinking { get; set; }
+
+        event Action? OnChange;
+        void NotifyStateChanged();
     }
 }
