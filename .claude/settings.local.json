@@ -7,6 +7,10 @@
       "Bash(dotnet build *)",
       "Bash(dotnet run *)",
       "Bash(dotnet watch *)"
+    ],
+     "additionalDirectories": [
+      "/mnt/c/Users/Moham/source/repos/aichat",
+      "/mnt/c/Users/mohamed/source/repos/aichat"
     ]
   }
 }
