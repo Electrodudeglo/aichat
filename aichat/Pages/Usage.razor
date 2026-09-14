@@ -48,14 +48,12 @@
 
     private int TotalTokens = 0;
 
-
     private void TokensCalculator()
     {
-        
-        
-
+        foreach(var prompt in ChatState.Tokens)
+        {
+            promptTokens += prompt.PromptTokens;            
+        }
     }
-
-        
 
 }
