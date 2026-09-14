@@ -9,5 +9,8 @@ namespace aichat.Services
         public List<TokenUsageModel> Tokens { get; } = new();
         public bool IsThinking { get; set; }
 
+        public event Action? OnChange;
+
+        public void NotifyStateChanged() => OnChange?.Invoke();
     }
 }
