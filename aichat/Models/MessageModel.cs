@@ -12,5 +12,6 @@ namespace aichat.Models
         public string Content { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; } = DateTime.Now;
         public bool Liked { get; set; }
+        public TokenUsageModel? TokenUsage { get; set; }
     }
 }
