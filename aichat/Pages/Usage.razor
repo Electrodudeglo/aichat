@@ -36,8 +36,23 @@
                 <p class="text-white text-center text-2xl font-semibold">@TotalTokens</p>
             </div>
         </div>
+    </div>
+</div>
+
+
+<div class="rounded-2xl border border-white/10 bg-[#141414] p-6 mt-4">
+
+    <div class="">
+       
+        @foreach(var message in messages )
+        {
+            
+            <div class="text-white text-xs">@message.Message</div>
+
+        }
 
     </div>
+
 </div>
 
 @code {
@@ -49,6 +64,15 @@
 
     private int TotalTokens = 0;
 
+    private List<TestMessages> messages = new List<TestMessages> {
+    new TestMessages { Message = "Sure, I can help with that." },
+    new TestMessages { Message = "Here's a quick summary of the results." },
+    new TestMessages { Message = "I've updated the file as requested." },
+    new TestMessages { Message = "That should fix the issue." },
+    new TestMessages { Message = "Let me know if you need anything else." },
+    new TestMessages { Message = "I found three possible causes." },
+    new TestMessages { Message = "Sorry, I couldn't complete that request." }
+    };
 
     protected override void OnInitialized()
     {
@@ -80,5 +104,13 @@
     {
         ChatState.OnChange -= HandleChange;
     }
+    
+
+    
+
+    public class TestMessages
+    {
+        public string Message { get; set; } = string.Empty;
+    };
 
 }
