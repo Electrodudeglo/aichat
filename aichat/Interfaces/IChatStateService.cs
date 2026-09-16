@@ -5,7 +5,6 @@ namespace aichat.Interfaces
     public interface IChatStateService
     {
         List<MessageModel> Messages { get; }
-        List<TokenUsageModel> Tokens { get; }
         bool IsThinking { get; set; }
 
         event Action? OnChange;
