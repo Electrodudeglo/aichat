@@ -43,13 +43,7 @@
 <div class="rounded-2xl border border-white/10 bg-[#141414] p-6 mt-4">
 
     <div class="">
-       
-        @foreach(var message in messages )
-        {
-            
-            <div class="text-white text-xs">@message.Message</div>
-
-        }
+           
 
     </div>
 
@@ -64,15 +58,39 @@
 
     private int TotalTokens = 0;
 
-    private List<TestMessages> messages = new List<TestMessages> {
-    new TestMessages { Message = "Sure, I can help with that." },
-    new TestMessages { Message = "Here's a quick summary of the results." },
-    new TestMessages { Message = "I've updated the file as requested." },
-    new TestMessages { Message = "That should fix the issue." },
-    new TestMessages { Message = "Let me know if you need anything else." },
-    new TestMessages { Message = "I found three possible causes." },
-    new TestMessages { Message = "Sorry, I couldn't complete that request." }
+    private List<MessageModel> messages = new List<MessageModel> {
+
+        new MessageModel { Role = ChatRole.Assistant, Content = "Hello", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 5, PromptTokens = 8, TotalTokens = 13 } },
+        new MessageModel { Role = ChatRole.User, Content = "How are you", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "I'm doing well! How can I help you today?", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 7, PromptTokens = 10, TotalTokens = 17 } },
+        new MessageModel { Role = ChatRole.User, Content = "Hello", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "Hi again! What's on your mind?", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 22, PromptTokens = 15, TotalTokens = 37 } },
+        new MessageModel { Role = ChatRole.User, Content = "Hello", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "Always nice to hear from you. Need anything?", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 6, PromptTokens = 8, TotalTokens = 14 } },
+        new MessageModel { Role = ChatRole.User, Content = "Hello", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "Hey! Ready when you are.", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 18, PromptTokens = 12, TotalTokens = 30 } },
+        // --- Added generic AI-style responses below ---
+        new MessageModel { Role = ChatRole.User, Content = "What can you do?", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "I can help answer questions, explain concepts, and assist with coding or ideas.", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 6, PromptTokens = 8, TotalTokens = 14 } },
+
+        new MessageModel { Role = ChatRole.User, Content = "Tell me something interesting", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "Did you know honey never spoils? Archaeologists found 3,000-year-old honey still preserved.", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 20, PromptTokens = 14, TotalTokens = 34 } },
+
+        new MessageModel { Role = ChatRole.User, Content = "That's cool", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "Glad you liked it! Want another fun fact?", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 6, PromptTokens = 8, TotalTokens = 14 } },
+
+        new MessageModel { Role = ChatRole.User, Content = "Maybe later", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "No problem. Just let me know when you're curious again.", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 12, PromptTokens = 10, TotalTokens = 22 } },
+
+        new MessageModel { Role = ChatRole.User, Content = "Can you help me with coding?", Timestamp = DateTime.Now, Liked = false },
+        new MessageModel { Role = ChatRole.Assistant, Content = "Absolutely. What language or problem are you working on?", Timestamp = DateTime.Now, Liked = false, TokenUsage = new TokenUsageModel { CompletionTokens = 10, PromptTokens = 12, TotalTokens = 22 } }
     };
+
+
+    public void TestField()
+    {
+        ChatState.Messages.AddRange(messages);   
+    }
 
     protected override void OnInitialized()
     {
@@ -92,11 +110,16 @@
         CompletetionTokens = 0;
         TotalTokens = 0;
 
-        foreach(var token in ChatState.Tokens)
+        foreach (var message in ChatState.Messages)
         {
-            promptTokens += token.PromptTokens;
-            CompletetionTokens += token.CompletionTokens;
-            TotalTokens += token.TotalTokens;
+            if (message.TokenUsage is not { } usage)
+            {
+                continue;
+            }
+
+            promptTokens += usage.PromptTokens;
+            CompletetionTokens += usage.CompletionTokens;
+            TotalTokens += usage.TotalTokens;
         }
     }
 
