@@ -42,24 +42,23 @@
 
 <div class="rounded-2xl border border-white/10 bg-[#141414] p-6 mt-4">
 
-    <div class="flex flex-col gap-3">
-        @foreach (var message in messages)
-        {
-            <div class="rounded-2xl border border-white/10 bg-[#1C1C1C] p-4">
-                <div class="flex items-center justify-between text-xs text-gray-500">
-                    <span class="uppercase tracking-wide text-gray-400">@message.Role</span>
-                    <span>@message.Timestamp.ToString("g")</span>
-                </div>
-                <p class="mt-2 text-sm text-gray-200">@message.Content</p>
-                @if (message.TokenUsage is { } usage)
-                {
-                    <p class="mt-2 text-xs text-gray-500">
-                        Prompt: @usage.PromptTokens · Completion: @usage.CompletionTokens · Total: @usage.TotalTokens
-                    </p>
-                }
+    @foreach (var row in BuildUsageRows(messages).TakeLast(6))
+    {
+        <div class="flex items-center justify-center gap-6 rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
+                <span class="text-xs font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
             </div>
-        }
-    </div>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase tracking-wide text-gray-500">Completion</span>
+                <span class="text-xs font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase tracking-wide text-gray-500">Total</span>
+                <span class="text-xs font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
+            </div>
+        </div>
+    }
 
 </div>
 
@@ -74,23 +73,60 @@
 
     private List<MessageModel> messages = new();
 
+    private static (string Arrow, string Color) GetTrend(int current, int? previous)
+    {
+        if (previous is null || current == previous)
+        {
+            return ("", "text-gray-300");
+        }
 
+        return current > previous ? ("▲", "text-red-400") : ("▼", "text-emerald-400");
+    }
 
+    private sealed record UsageRow(TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
+
+    private static List<UsageRow> BuildUsageRows(List<MessageModel> source)
+    {
+        var rows = new List<UsageRow>();
+        int? previousPrompt = null;
+        int? previousCompletion = null;
+        int? previousTotal = null;
+
+        foreach (var message in source)
+        {
+            if (message.TokenUsage is not { } usage)
+            {
+                continue;
+            }
+
+            rows.Add(new UsageRow(
+                usage,
+                GetTrend(usage.PromptTokens, previousPrompt),
+                GetTrend(usage.CompletionTokens, previousCompletion),
+                GetTrend(usage.TotalTokens, previousTotal)));
+
+            previousPrompt = usage.PromptTokens;
+            previousCompletion = usage.CompletionTokens;
+            previousTotal = usage.TotalTokens;
+        }
+
+        return rows;
+    }
 
     public void TestField()
     {
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Hello", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 50, CompletionTokens = 200, TotalTokens = 250 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Hey, can you help me plan a weekend trip?", Liked = false, Timestamp = DateTime.Now });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Sure! Where are you thinking of going?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 40, CompletionTokens = 60, TotalTokens = 100 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Somewhere near the coast, maybe two days.", Liked = false, Timestamp = DateTime.Now });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Got it. I'd suggest a small beach town with a scenic drive - relaxed pace, a couple of good restaurants nearby.", Liked = true, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 55, CompletionTokens = 90, TotalTokens = 145 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "That sounds perfect. Any packing tips?", Liked = false, Timestamp = DateTime.Now });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Pack light: swimwear, a light jacket for the evenings, sunscreen, and comfortable walking shoes.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 35, CompletionTokens = 70, TotalTokens = 105 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Thanks, this is really helpful!", Liked = false, Timestamp = DateTime.Now });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Hello", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 50, CompletionTokens = 200, TotalTokens = 250 } }); 
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Sure! Where are you thinking of going?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 40, CompletionTokens = 60, TotalTokens = 100 } });       
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Got it. I'd suggest a small beach town with a scenic drive - relaxed pace, a couple of good restaurants nearby.", Liked = true, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 55, CompletionTokens = 90, TotalTokens = 145 } }); 
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Pack light: swimwear, a light jacket for the evenings, sunscreen, and comfortable walking shoes.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 35, CompletionTokens = 70, TotalTokens = 105 } }); 
         messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Happy to help! Let me know if you'd like restaurant or hotel suggestions too.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 45, CompletionTokens = 80, TotalTokens = 125 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Yes please, a couple of restaurant ideas would be great.", Liked = false, Timestamp = DateTime.Now });
         messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Look for a seafood spot right on the harbor, and a casual cafe for breakfast before the beach. Want me to find specific names?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 60, CompletionTokens = 95, TotalTokens = 155 } });
-
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Sure, here are two solid picks near the harbor.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 70, CompletionTokens = 60, TotalTokens = 130 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "For breakfast, try the little cafe two blocks up from the pier - great pastries.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 50, CompletionTokens = 110, TotalTokens = 160 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Want me to check if either place takes reservations?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 65, CompletionTokens = 40, TotalTokens = 105 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Got it, I'll assume walk-in for now and note the times you'd prefer.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 90, CompletionTokens = 85, TotalTokens = 175 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Evenings around 7 should be quieter than the weekend rush.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 60, CompletionTokens = 50, TotalTokens = 110 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Here's a quick recap of the trip plan so far, with all the details pulled together.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 80, CompletionTokens = 120, TotalTokens = 200 } });
     }
 
     protected override void OnInitialized()
