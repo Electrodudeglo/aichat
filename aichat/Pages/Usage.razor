@@ -42,25 +42,28 @@
 
 <div class="rounded-2xl border border-white/10 bg-[#141414] p-6 mt-4">
 
-    @foreach (var row in BuildUsageRows(messages).TakeLast(6))
-    {
-        <div class="rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">            
-            <div class="flex items-center justify-between px-6">
-                <div class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
+    @{ var rows = BuildUsageRows(messages).TakeLast(6).ToList(); }
 
-                <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400" title="@row.Content">@row.Content</div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
-                    <span class="text-xs font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Completion</span>
-                    <span class="text-xs font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Total</span>
-                    <span class="text-xs font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
-                </div>
+    @for (var i = 0; i < rows.Count; i++)
+    {
+        var row = rows[i];
+        var divider = i < rows.Count - 1 ? "border-b border-white/5" : "";
+
+        <div class="flex items-center justify-between gap-4 px-2 py-2 @divider">
+            <div class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
+
+            <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400" title="@row.Content">@row.Content</div>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
+                <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase tracking-wide text-gray-500">Completion</span>
+                <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase tracking-wide text-gray-500">Total</span>
+                <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
             </div>
         </div>
     }
