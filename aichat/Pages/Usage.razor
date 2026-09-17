@@ -47,6 +47,8 @@
         <div class="rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">            
             <div class="flex items-center justify-between px-6">
                 <div class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
+
+                <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400" title="@row.Content">@row.Content</div>
                 <div class="flex items-center gap-1">
                     <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
                     <span class="text-xs font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
@@ -86,7 +88,7 @@
         return current > previous ? ("▲", "text-red-400") : ("▼", "text-emerald-400");
     }
 
-    private sealed record UsageRow(DateTime Timestamp, TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
+    private sealed record UsageRow(DateTime Timestamp, string Content, TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
 
     private static List<UsageRow> BuildUsageRows(List<MessageModel> source)
     {
@@ -104,6 +106,7 @@
 
             rows.Add(new UsageRow(
                 message.Timestamp,
+                message.Content,
                 usage,
                 GetTrend(usage.PromptTokens, previousPrompt),
                 GetTrend(usage.CompletionTokens, previousCompletion),
