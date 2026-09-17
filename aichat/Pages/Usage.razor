@@ -44,18 +44,21 @@
 
     @foreach (var row in BuildUsageRows(messages).TakeLast(6))
     {
-        <div class="flex items-center justify-center gap-6 rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
-                <span class="text-xs font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
-            </div>
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase tracking-wide text-gray-500">Completion</span>
-                <span class="text-xs font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
-            </div>
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase tracking-wide text-gray-500">Total</span>
-                <span class="text-xs font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
+        <div class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">
+            <span class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</span>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
+                    <span class="text-xs font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Completion</span>
+                    <span class="text-xs font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Total</span>
+                    <span class="text-xs font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
+                </div>
             </div>
         </div>
     }
@@ -83,7 +86,7 @@
         return current > previous ? ("▲", "text-red-400") : ("▼", "text-emerald-400");
     }
 
-    private sealed record UsageRow(TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
+    private sealed record UsageRow(DateTime Timestamp, TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
 
     private static List<UsageRow> BuildUsageRows(List<MessageModel> source)
     {
@@ -100,6 +103,7 @@
             }
 
             rows.Add(new UsageRow(
+                message.Timestamp,
                 usage,
                 GetTrend(usage.PromptTokens, previousPrompt),
                 GetTrend(usage.CompletionTokens, previousCompletion),
