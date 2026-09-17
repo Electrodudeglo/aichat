@@ -3,6 +3,7 @@ namespace aichat.Services
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
     using aichat.Models;
+    using aichat.Enums;
 
     public class ChatService
     {
@@ -20,7 +21,7 @@ namespace aichat.Services
                 model = "gpt-4-turbo",
                 messages = messages.Select(m => new ChatCompletionMessage
                 {
-                    Role = m.Role == ChatRole.User ? "user" : "assistant",
+                    Role = m.Role == ChatRoleEnum.User ? "user" : "assistant",
                     Content = m.Content
                 })
             };
