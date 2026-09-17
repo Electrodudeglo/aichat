@@ -17,14 +17,14 @@
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
 
         <div class="w-full sm:flex-1">
-            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-center text-gray-400">Prompt Tokens</p>
+            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-center text-gray-400">Total Prompt Tokens</p>
             <div class="border rounded-2xl border-white/10 bg-[#1C1C1C] p-6 shadow-2xl">
                 <p class="text-white text-center text-2xl font-semibold">@promptTokens</p>
             </div>
         </div>
 
         <div class="w-full sm:flex-1">
-            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-center text-gray-400">Completion Tokens</p>
+            <p class="mb-2 mx-2 text-xs uppercase tracking-wide text-center text-gray-400">Total Completion Tokens</p>
             <div class="border rounded-2xl border-white/10 bg-[#1C1C1C] p-6 shadow-2xl">
                 <p class="text-white text-center text-2xl font-semibold">@CompletetionTokens</p>
             </div>
@@ -44,9 +44,9 @@
 
     @foreach (var row in BuildUsageRows(messages).TakeLast(6))
     {
-        <div class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">
-            <span class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</span>
-            <div class="flex items-center gap-6">
+        <div class="rounded-2xl border border-white/10 bg-[#1C1C1C] px-4 py-2 mb-2">            
+            <div class="flex items-center justify-between px-6">
+                <div class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
                 <div class="flex items-center gap-1">
                     <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
                     <span class="text-xs font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
