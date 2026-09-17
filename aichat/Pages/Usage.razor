@@ -80,6 +80,16 @@
     public void TestField()
     {
         messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Hello", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 50, CompletionTokens = 200, TotalTokens = 250 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Hey, can you help me plan a weekend trip?", Liked = false, Timestamp = DateTime.Now });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Sure! Where are you thinking of going?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 40, CompletionTokens = 60, TotalTokens = 100 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Somewhere near the coast, maybe two days.", Liked = false, Timestamp = DateTime.Now });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Got it. I'd suggest a small beach town with a scenic drive - relaxed pace, a couple of good restaurants nearby.", Liked = true, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 55, CompletionTokens = 90, TotalTokens = 145 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "That sounds perfect. Any packing tips?", Liked = false, Timestamp = DateTime.Now });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Pack light: swimwear, a light jacket for the evenings, sunscreen, and comfortable walking shoes.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 35, CompletionTokens = 70, TotalTokens = 105 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Thanks, this is really helpful!", Liked = false, Timestamp = DateTime.Now });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Happy to help! Let me know if you'd like restaurant or hotel suggestions too.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 45, CompletionTokens = 80, TotalTokens = 125 } });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.User, Content = "Yes please, a couple of restaurant ideas would be great.", Liked = false, Timestamp = DateTime.Now });
+        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Look for a seafood spot right on the harbor, and a casual cafe for breakfast before the beach. Want me to find specific names?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 60, CompletionTokens = 95, TotalTokens = 155 } });
 
     }
 
