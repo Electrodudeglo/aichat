@@ -54,15 +54,15 @@
 
             <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400" title="@row.Content">@row.Content</div>
             <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase tracking-wide text-gray-500">Prompt</span>
+                <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
                 <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
             </div>
             <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase tracking-wide text-gray-500">Completion</span>
+                <span class="text-[10px] tracking-wide text-gray-500">Completion</span>
                 <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
             </div>
             <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase tracking-wide text-gray-500">Total</span>
+                <span class="text-[10px] tracking-wide text-gray-500">Total</span>
                 <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
             </div>
         </div>
