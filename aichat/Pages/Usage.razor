@@ -1,6 +1,9 @@
 @page "/usage"
 @using aichat.Interfaces
 @inject IChatStateService ChatState
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject HttpClient Http
 @implements IDisposable
 
 <PageTitle>Usage</PageTitle>
@@ -52,7 +55,7 @@
         <div class="flex items-center justify-between gap-4 px-2 py-2 @divider">
             <div class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
 
-            <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400" title="@row.Content">@row.Content</div>
+            <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400">@row.Content</div>
             <div class="flex items-center gap-1">
                 <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
                 <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
@@ -123,27 +126,21 @@
         return rows;
     }
 
-    public void TestField()
+    public async Task TestField()
     {
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Hello", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 50, CompletionTokens = 200, TotalTokens = 250 } }); 
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Sure! Where are you thinking of going?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 40, CompletionTokens = 60, TotalTokens = 100 } });       
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Got it. I'd suggest a small beach town with a scenic drive - relaxed pace, a couple of good restaurants nearby.", Liked = true, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 55, CompletionTokens = 90, TotalTokens = 145 } }); 
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Pack light: swimwear, a light jacket for the evenings, sunscreen, and comfortable walking shoes.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 35, CompletionTokens = 70, TotalTokens = 105 } }); 
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Happy to help! Let me know if you'd like restaurant or hotel suggestions too.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 45, CompletionTokens = 80, TotalTokens = 125 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Look for a seafood spot right on the harbor, and a casual cafe for breakfast before the beach. Want me to find specific names?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 60, CompletionTokens = 95, TotalTokens = 155 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Sure, here are two solid picks near the harbor.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 70, CompletionTokens = 60, TotalTokens = 130 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "For breakfast, try the little cafe two blocks up from the pier - great pastries.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 50, CompletionTokens = 110, TotalTokens = 160 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Want me to check if either place takes reservations?", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 65, CompletionTokens = 40, TotalTokens = 105 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Got it, I'll assume walk-in for now and note the times you'd prefer.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 90, CompletionTokens = 85, TotalTokens = 175 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Evenings around 7 should be quieter than the weekend rush.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 60, CompletionTokens = 50, TotalTokens = 110 } });
-        messages.Add( new MessageModel { Role = Enums.ChatRoleEnum.Assistant, Content = "Here's a quick recap of the trip plan so far, with all the details pulled together.", Liked = false, Timestamp = DateTime.Now, TokenUsage = new TokenUsageModel { PromptTokens = 80, CompletionTokens = 120, TotalTokens = 200 } });
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        options.Converters.Add(new JsonStringEnumConverter());
+
+        var testMessages = await Http.GetFromJsonAsync<List<MessageModel>>("sample-data/airesponse.json", options);
+        messages.AddRange(testMessages ?? []);
+
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         ChatState.OnChange += HandleChange;
         RecalculateTokens();
-        TestField();
+        await TestField();
     }
 
     private void HandleChange()
