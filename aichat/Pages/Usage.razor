@@ -47,29 +47,41 @@
 
     @{ var rows = BuildUsageRows(messages).TakeLast(6).ToList(); }
 
-    @for (var i = 0; i < rows.Count; i++)
+    @if(rows.Count != 0)
     {
-        var row = rows[i];
-        var divider = i < rows.Count - 1 ? "border-b border-white/5" : "";
+        
+        @for (var i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            var divider = i < rows.Count - 1 ? "border-b border-white/5" : "";
 
-        <div class="flex items-center justify-between gap-4 px-2 py-2 @divider">
-            <div class="shrink-0 text-[10px] text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
+            <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_6.5rem_6.5rem_6.5rem] items-center gap-3 px-2 py-2 @divider">
+                <div class="text-[10px] tabular-nums text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
 
-            <div class="min-w-0 max-w-[100px] truncate text-[10px] text-gray-400">@row.Content</div>
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
-                <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens @row.PromptTrend.Arrow</span>
+                <div class="min-w-0 truncate text-[10px] text-gray-400">@row.Content</div>
+                <div class="flex items-center justify-between gap-1 tabular-nums">
+                    <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
+                    <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens<span class="inline-block w-3 text-center">@row.PromptTrend.Arrow</span></span>
+                </div>
+                <div class="flex items-center justify-between gap-1 tabular-nums">
+                    <span class="text-[10px] tracking-wide text-gray-500">Completion</span>
+                    <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens<span class="inline-block w-3 text-center">@row.CompletionTrend.Arrow</span></span>
+                </div>
+                <div class="flex items-center justify-between gap-1 tabular-nums">
+                    <span class="text-[10px] tracking-wide text-gray-500">Total</span>
+                    <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens<span class="inline-block w-3 text-center">@row.TotalTrend.Arrow</span></span>
+                </div>
             </div>
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] tracking-wide text-gray-500">Completion</span>
-                <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens @row.CompletionTrend.Arrow</span>
-            </div>
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] tracking-wide text-gray-500">Total</span>
-                <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens @row.TotalTrend.Arrow</span>
-            </div>
-        </div>
+        }
+
     }
+
+    else {
+
+            
+            <div class="text-white">Hello</div>
+
+       }
 
 </div>
 
@@ -125,22 +137,18 @@
 
         return rows;
     }
-
-    public async Task TestField()
+    
+    public void MessageData()
     {
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        options.Converters.Add(new JsonStringEnumConverter());
-
-        var testMessages = await Http.GetFromJsonAsync<List<MessageModel>>("sample-data/airesponse.json", options);
-        messages.AddRange(testMessages ?? []);
-
+        messages = ChatState.Messages;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         ChatState.OnChange += HandleChange;
         RecalculateTokens();
-        await TestField();
+        MessageData();
+
     }
 
     private void HandleChange()
