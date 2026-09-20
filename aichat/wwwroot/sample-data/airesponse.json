@@ -1,4 +1,132 @@
-{
-  "title": "SOLID Principles in C#",
-  "content": "# SOLID Principles in C#\n\nThe SOLID principles are a set of five foundational guidelines that help developers create software that is modular, testable, and easy to maintain. These principles encourage clean architecture, separation of concerns, and flexible design. Below is an extended explanation of each principle with full markdown formatting and code examples.\n\n---\n\n## 1. Single Responsibility Principle (SRP)\nA class should have **one reason to change**. This means each class should focus on a single responsibility.\n\n### Bad Example\n```csharp\npublic class ReportService\n{\n    public void SaveReport(Report report)\n    {\n        // Save to database\n    }\n\n    public void Log(string message)\n    {\n        File.WriteAllText(\"log.txt\", message);\n    }\n}\n```\nThis class handles both persistence and logging.\n\n### Good Example\n```csharp\npublic class ReportService\n{\n    private readonly ILogger _logger;\n\n    public ReportService(ILogger logger)\n    {\n        _logger = logger;\n    }\n\n    public void SaveReport(Report report)\n    {\n        // Save to database\n        _logger.Log(\"Report saved\");\n    }\n}\n\npublic interface ILogger\n{\n    void Log(string message);\n}\n\npublic class FileLogger : ILogger\n{\n    public void Log(string message)\n    {\n        File.WriteAllText(\"log.txt\", message);\n    }\n}\n```\nEach class now has one responsibility.\n\n---\n\n## 2. Open/Closed Principle (OCP)\nClasses should be **open for extension** but **closed for modification**.\n\n### Bad Example\n```csharp\npublic class PaymentProcessor\n{\n    public void Process(string method)\n    {\n        if (method == \"card\")\n        {\n            // Card payment\n        }\n        else if (method == \"paypal\")\n        {\n            // PayPal payment\n        }\n    }\n}\n```\nAdding new payment methods requires editing the same class.\n\n### Good Example\n```csharp\npublic interface IPaymentMethod\n{\n    void Pay(decimal amount);\n}\n\npublic class CardPayment : IPaymentMethod\n{\n    public void Pay(decimal amount)\n    {\n        Console.WriteLine(\"Paid with card\");\n    }\n}\n\npublic class PayPalPayment : IPaymentMethod\n{\n    public void Pay(decimal amount)\n    {\n        Console.WriteLine(\"Paid with PayPal\");\n    }\n}\n\npublic class PaymentProcessor\n{\n    public void Process(IPaymentMethod method, decimal amount)\n    {\n        method.Pay(amount);\n    }\n}\n```\nNew payment types can be added without modifying `PaymentProcessor`.\n\n---\n\n## 3. Liskov Substitution Principle (LSP)\nSubclasses should be usable anywhere their base class is expected.\n\n### Bad Example\n```csharp\npublic class Bird\n{\n    public virtual void Fly()\n    {\n        Console.WriteLine(\"Flying\");\n    }\n}\n\npublic class Penguin : Bird\n{\n    public override void Fly()\n    {\n        throw new Exception(\"Penguins cannot fly\");\n    }\n}\n```\nThis violates LSP because `Penguin` breaks the expected behavior.\n\n### Good Example\n```csharp\npublic abstract class Bird\n{\n    public abstract void Move();\n}\n\npublic class Sparrow : Bird\n{\n    public override void Move()\n    {\n        Console.WriteLine(\"Flying\");\n    }\n}\n\npublic class Penguin : Bird\n{\n    public override void Move()\n    {\n        Console.WriteLine(\"Walking\");\n    }\n}\n```\nNow both subclasses behave correctly.\n\n---\n\n## 4. Interface Segregation Principle (ISP)\nClients should not be forced to depend on methods they do not use.\n\n### Bad Example\n```csharp\npublic interface IAnimal\n{\n    void Walk();\n    void Fly();\n    void Swim();\n}\n```\nNot all animals can fly or swim.\n\n### Good Example\n```csharp\npublic interface IWalk\n{\n    void Walk();\n}\n\npublic interface IFly\n{\n    void Fly();\n}\n\npublic interface ISwim\n{\n    void Swim();\n}\n\npublic class Duck : IWalk, IFly, ISwim\n{\n    public void Walk() {}\n    public void Fly() {}\n    public void Swim() {}\n}\n\npublic class Dog : IWalk\n{\n    public void Walk() {}\n}\n```\nInterfaces are now small and focused.\n\n---\n\n## 5. Dependency Inversion Principle (DIP)\nHigh‑level modules should not depend on low‑level modules. Both should depend on abstractions.\n\n### Bad Example\n```csharp\npublic class EmailService\n{\n    private readonly SmtpClient _client = new SmtpClient();\n\n    public void Send(string message)\n    {\n        _client.Send(message);\n    }\n}\n```\nThis tightly couples `EmailService` to `SmtpClient`.\n\n### Good Example\n```csharp\npublic interface IEmailClient\n{\n    void Send(string message);\n}\n\npublic class SmtpEmailClient : IEmailClient\n{\n    public void Send(string message)\n    {\n        // SMTP send logic\n    }\n}\n\npublic class EmailService\n{\n    private readonly IEmailClient _client;\n\n    public EmailService(IEmailClient client)\n    {\n        _client = client;\n    }\n\n    public void Send(string message)\n    {\n        _client.Send(message);\n    }\n}\n```\nNow `EmailService` depends on an abstraction.\n\n---\n\n## Summary\nThe SOLID principles help developers build software that is flexible, maintainable, and resilient to change. By applying these principles, you reduce coupling, improve readability, and create systems that scale gracefully."
-}
+[
+  {
+    "role": "Assistant",
+    "content": "Hello",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 50,
+      "completionTokens": 200,
+      "totalTokens": 250
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Sure! Where are you thinking of going?",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 40,
+      "completionTokens": 60,
+      "totalTokens": 100
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Got it. I'd suggest a small beach town with a scenic drive - relaxed pace, a couple of good restaurants nearby.",
+    "liked": true,
+    "tokenUsage": {
+      "promptTokens": 55,
+      "completionTokens": 90,
+      "totalTokens": 145
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Pack light: swimwear, a light jacket for the evenings, sunscreen, and comfortable walking shoes.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 35,
+      "completionTokens": 70,
+      "totalTokens": 105
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Happy to help! Let me know if you'd like restaurant or hotel suggestions too.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 45,
+      "completionTokens": 80,
+      "totalTokens": 125
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Look for a seafood spot right on the harbor, and a casual cafe for breakfast before the beach. Want me to find specific names?",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 60,
+      "completionTokens": 95,
+      "totalTokens": 155
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Sure, here are two solid picks near the harbor.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 70,
+      "completionTokens": 60,
+      "totalTokens": 130
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "For breakfast, try the little cafe two blocks up from the pier - great pastries.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 50,
+      "completionTokens": 110,
+      "totalTokens": 160
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Want me to check if either place takes reservations?",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 65,
+      "completionTokens": 40,
+      "totalTokens": 105
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Got it, I'll assume walk-in for now and note the times you'd prefer.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 90,
+      "completionTokens": 85,
+      "totalTokens": 175
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Evenings around 7 should be quieter than the weekend rush.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 60,
+      "completionTokens": 50,
+      "totalTokens": 110
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Here's a quick recap of the trip plan so far, with all the details pulled together.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 80,
+      "completionTokens": 120,
+      "totalTokens": 200
+    }
+  },
+  {
+    "role": "Assistant",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae arcu nec justo tincidunt feugiat. Integer ac sem vel augue fermentum bibendum non vitae sapien. Suspendisse potenti. Curabitur aliquet magna non hendrerit gravida. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vivamus ac urna id neque pharetra luctus. Sed non justo sed ipsum placerat bibendum. Phasellus sed nisl id urna tincidunt fermentum. Etiam sit amet augue ac justo bibendum gravida. Cras vel lorem ac nisi cursus volutpat. Integer vel sem non mi bibendum tincidunt. Aliquam erat volutpat. Sed id risus nec lorem tincidunt suscipit. Vivamus non magna ac elit tempor congue. Integer id arcu vitae libero dictum gravida. Donec vel augue id magna tincidunt gravida. Vivamus luctus lorem non fermentum volutpat. Etiam id velit non risus dictum pharetra. Mauris eget orci vel justo volutpat tincidunt.",
+    "liked": false,
+    "tokenUsage": {
+      "promptTokens": 35,
+      "completionTokens": 70,
+      "totalTokens": 105
+    }
+  }
+]

@@ -1,4 +1,4 @@
-namespace aichat.Services
+namespace aichat.Interfaces
 {
     using aichat.Models;
 
@@ -6,5 +6,8 @@ namespace aichat.Services
     {
         List<MessageModel> Messages { get; }
         bool IsThinking { get; set; }
+
+        event Action? OnChange;
+        void NotifyStateChanged();
     }
 }

@@ -1,4 +1,5 @@
 using aichat;
+using aichat.Interfaces;
 using aichat.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
