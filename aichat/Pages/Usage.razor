@@ -45,7 +45,7 @@
 
 <div class="rounded-2xl border border-white/10 bg-[#141414] p-6 mt-4">
 
-    @{ var rows = BuildUsageRows(messages).TakeLast(6).ToList(); }
+    @{ var rows = BuildUsageRows(messages).Take(6).Reverse().ToList(); }
 
     @if(rows.Count != 0)
     {
@@ -59,15 +59,15 @@
                 <div class="text-[10px] tabular-nums text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
 
                 <div class="min-w-0 truncate text-[10px] text-gray-400">@row.Content</div>
-                <div class="flex items-center justify-between gap-1 tabular-nums">
+                <div class="flex items-center gap-1 tabular-nums">
                     <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
                     <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens<span class="inline-block w-3 text-center">@row.PromptTrend.Arrow</span></span>
                 </div>
-                <div class="flex items-center justify-between gap-1 tabular-nums">
+                <div class="flex items-center gap-1 tabular-nums">
                     <span class="text-[10px] tracking-wide text-gray-500">Completion</span>
                     <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens<span class="inline-block w-3 text-center">@row.CompletionTrend.Arrow</span></span>
                 </div>
-                <div class="flex items-center justify-between gap-1 tabular-nums">
+                <div class="flex items-center gap-1 tabular-nums">
                     <span class="text-[10px] tracking-wide text-gray-500">Total</span>
                     <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens<span class="inline-block w-3 text-center">@row.TotalTrend.Arrow</span></span>
                 </div>
@@ -75,14 +75,11 @@
         }
 
     }
-
-    else {
-
-            
-            <div class="text-white">Hello</div>
-
+    else {            
+            <div class="flex justify-center">
+                <p class="text-white">You responses and associated data will be displayed here.</p>
+            </div>
        }
-
 </div>
 
 @code {
