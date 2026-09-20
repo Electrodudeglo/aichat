@@ -49,24 +49,39 @@
         @for (var i = 0; i < rows.Count; i++)
         {
             var row = rows[i];
-            var divider = i < rows.Count - 1 ?"border-b border-white/5" : "";
+            var divider = i < rows.Count - 1 ? "border-b border-white/5" : "";
+            var message = row.Message;
+            var expanded = expandedMessages.Contains(message);
 
-            <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_6.5rem_6.5rem_6.5rem] items-center gap-3 px-2 py-2 @divider">
-                <div class="text-[10px] tabular-nums text-gray-500">@row.Timestamp.ToString("HH:mm:ss")</div>
+            <div class="@divider">
+                <button type="button"
+                        class="grid w-full cursor-pointer grid-cols-[3.5rem_minmax(0,1fr)_6.5rem_6.5rem_6.5rem] items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-white/5"
+                        aria-expanded="@(expanded ? "true" : "false")"
+                        @onclick="() => ToggleMessage(message)">
+                    <div class="text-[10px] tabular-nums text-gray-500">@message.Timestamp.ToString("HH:mm:ss")</div>
 
-                <div class="min-w-0 truncate text-[10px] text-gray-400" title="@row.Content">@row.Content</div>
-                <div class="flex items-center gap-1 tabular-nums">
-                    <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
-                    <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens<span class="inline-block w-3 text-center">@row.PromptTrend.Arrow</span></span>
-                </div>
-                <div class="flex items-center gap-1 tabular-nums">
-                    <span class="text-[10px] tracking-wide text-gray-500">Completion</span>
-                    <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens<span class="inline-block w-3 text-center">@row.CompletionTrend.Arrow</span></span>
-                </div>
-                <div class="flex items-center gap-1 tabular-nums">
-                    <span class="text-[10px] tracking-wide text-gray-500">Total</span>
-                    <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens<span class="inline-block w-3 text-center">@row.TotalTrend.Arrow</span></span>
-                </div>
+                    <div class="flex min-w-0 items-center gap-1 text-[10px] text-gray-400">
+                        <span class="inline-block w-3 shrink-0 text-center text-gray-500">@(expanded ? "▾" : "▸")</span>
+                        <span class="truncate">@message.Content</span>
+                    </div>
+                    <div class="flex items-center gap-1 tabular-nums">
+                        <span class="text-[10px] tracking-wide text-gray-500">Prompt</span>
+                        <span class="text-[10px] font-semibold @row.PromptTrend.Color">@row.Usage.PromptTokens<span class="inline-block w-3 text-center">@row.PromptTrend.Arrow</span></span>
+                    </div>
+                    <div class="flex items-center gap-1 tabular-nums">
+                        <span class="text-[10px] tracking-wide text-gray-500">Completion</span>
+                        <span class="text-[10px] font-semibold @row.CompletionTrend.Color">@row.Usage.CompletionTokens<span class="inline-block w-3 text-center">@row.CompletionTrend.Arrow</span></span>
+                    </div>
+                    <div class="flex items-center gap-1 tabular-nums">
+                        <span class="text-[10px] tracking-wide text-gray-500">Total</span>
+                        <span class="text-[10px] font-semibold @row.TotalTrend.Color">@row.Usage.TotalTokens<span class="inline-block w-3 text-center">@row.TotalTrend.Arrow</span></span>
+                    </div>
+                </button>
+
+                @if (expanded)
+                {
+                    <div class="mx-2 mb-2 max-h-64 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-white/5 bg-[#1C1C1C] p-3 text-xs leading-relaxed text-gray-300">@message.Content</div>
+                }
             </div>
         }
     }
@@ -81,6 +96,16 @@
 @code {
 
     private const int MaxRows = 6;
+
+    private readonly HashSet<MessageModel> expandedMessages = new();
+
+    private void ToggleMessage(MessageModel message)
+    {
+        if (!expandedMessages.Remove(message))
+        {
+            expandedMessages.Add(message);
+        }
+    }
 
     private IEnumerable<TokenUsageModel> Usages =>
         ChatState.Messages.Select(m => m.TokenUsage).OfType<TokenUsageModel>();
@@ -104,7 +129,7 @@
         return current > previous ? ("▲", "text-red-400") : ("▼", "text-emerald-400");
     }
 
-    private sealed record UsageRow(DateTime Timestamp, string Content, TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
+    private sealed record UsageRow(MessageModel Message, TokenUsageModel Usage, (string Arrow, string Color) PromptTrend, (string Arrow, string Color) CompletionTrend, (string Arrow, string Color) TotalTrend);
 
     private static List<UsageRow> BuildUsageRows(List<MessageModel> source)
     {
@@ -121,8 +146,7 @@
             }
 
             rows.Add(new UsageRow(
-                message.Timestamp,
-                message.Content,
+                message,
                 usage,
                 GetTrend(usage.PromptTokens, previousPrompt),
                 GetTrend(usage.CompletionTokens, previousCompletion),
