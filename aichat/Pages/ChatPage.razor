@@ -3,8 +3,6 @@
 @using aichat.Services
 @using Markdig
 @using aichat.Enums
-@using System.Text.Json
-@using System.Text.Json.Serialization
 @inject IJSRuntime JS
 @inject IChatStateService ChatState
 @inject ChatService ChatService
@@ -281,10 +279,5 @@
             await Send();
         }
     }
-
-    // protected override void OnInitialized()
-    // {
-    //     ChatState.Messages.Add( new MessageModel { Role = ChatRoleEnum.Assistant, Content = "Hello, How are you man?", Timestamp = DateTime.Now});
-    // }
 
 }
