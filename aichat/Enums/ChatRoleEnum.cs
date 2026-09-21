@@ -1,4 +1,4 @@
-﻿namespace aichat.Enums
+namespace aichat.Enums
 {
 
     public enum ChatRoleEnum
