@@ -1,4 +1,4 @@
-﻿namespace aichat.Models
+namespace aichat.Models
 {
     public class TokenUsageModel
     {
