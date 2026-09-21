@@ -3,6 +3,8 @@
 @using aichat.Services
 @using Markdig
 @using aichat.Enums
+@using System.Text.Json
+@using System.Text.Json.Serialization
 @inject IJSRuntime JS
 @inject IChatStateService ChatState
 @inject ChatService ChatService
@@ -42,6 +44,23 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="@(message.Liked ? "currentColor" : "none")" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M 12 21 s -6.5 -4.35 -9 -8 C 0.5 9 1.5 5 5 4 c 2 -0.6 4 0.2 5 2 c 1 -1.8 3 -2.6 5 -2 c 3.5 1 4.5 5 2 10 C 16 16 13 20 12 21 z" />
                                     </svg>
+                                </button>
+
+                                <button @onclick="() => CopyMessage(message)" title="@(copiedMessage == message ? "Copied" : "Copy")"
+                                        class="flex h-5 w-5 items-center justify-center rounded-md transition hover:bg-white/10 @(copiedMessage == message ? "text-emerald-400" : "text-gray-500 hover:text-gray-200")">
+                                    @if (copiedMessage == message)
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-3.5 w-3.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    }
+                                    else
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5">
+                                            <rect x="9" y="9" width="11" height="12" rx="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15V5a2 2 0 0 1 2-2h8" />
+                                        </svg>
+                                    }
                                 </button>
                             </div>
                         }
@@ -101,89 +120,93 @@
 
 @code {
 
-	private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
-	private static string RenderMarkdown(string content) => Markdown.ToHtml(content, MarkdownPipeline);
+    private static string RenderMarkdown(string content) => Markdown.ToHtml(content, MarkdownPipeline);
 
-	private const string userKeyStorageKey = "user_key";
+    private const string userKeyStorageKey = "user_key";
 
-	private string userKey = string.Empty;
+    private string userKey = string.Empty;
 
-	private string input = "";
+    private string input = "";
 
-	private bool showDelayedMessage = false;
+    private bool showDelayedMessage = false;
 
-	private bool showTypewriter = false;
+    private bool showTypewriter = false;
 
-	private string typewriterText = string.Empty;
+    private string typewriterText = string.Empty;
 
-	private const string ThinkingMessage = "Thinking harder...";
+    private MessageModel? copiedMessage;
 
-	private static readonly TimeSpan DelayedResponseThreshold = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan CopiedFeedbackDuration = TimeSpan.FromSeconds(2);
 
-	private static readonly TimeSpan TypewriterThreshold = TimeSpan.FromSeconds(6);
+    private const string ThinkingMessage = "Thinking harder...";
 
-	private static readonly TimeSpan TypewriterCharDelay = TimeSpan.FromMilliseconds(70);
+    private static readonly TimeSpan DelayedResponseThreshold = TimeSpan.FromSeconds(3);
 
-	private static readonly TimeSpan TypewriterLoopPause = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan TypewriterThreshold = TimeSpan.FromSeconds(6);
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
-			StateHasChanged();
-		}
-	}
+    private static readonly TimeSpan TypewriterCharDelay = TimeSpan.FromMilliseconds(70);
 
-	private async Task Send()
-	{
-		if (string.IsNullOrWhiteSpace(input) || ChatState.IsThinking)
-		{
-			return;
-		}
+    private static readonly TimeSpan TypewriterLoopPause = TimeSpan.FromSeconds(1);
 
-		if (string.IsNullOrWhiteSpace(userKey))
-		{
-			ChatState.Messages.Add(new MessageModel { Role = ChatRoleEnum.Assistant, Content = "Please set your OpenAI API key on the API Key page first." });
-			return;
-		}
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
+            StateHasChanged();
+        }
+    }
 
-		var text = input.Trim();
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(input) || ChatState.IsThinking)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(userKey))
+        {
+            ChatState.Messages.Add(new MessageModel { Role = ChatRoleEnum.Assistant, Content = "Please set your OpenAI API key on the API Key page first." });
+            return;
+        }
+
+        var text = input.Trim();
 
         ChatState.Messages.Add(new MessageModel { Role = ChatRoleEnum.User, Content = text });
-		input = "";
-		ChatState.IsThinking = true;
-		showDelayedMessage = false;
-		showTypewriter = false;
-		typewriterText = string.Empty;
-		StateHasChanged();
+        input = "";
+        ChatState.IsThinking = true;
+        showDelayedMessage = false;
+        showTypewriter = false;
+        typewriterText = string.Empty;
+        StateHasChanged();
 
-		using var delayCts = new CancellationTokenSource();
-		var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
-		var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
+        using var delayCts = new CancellationTokenSource();
+        var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
+        var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
 
-		var response = await ChatService.OpenAiAsync(userKey,ChatState.Messages);
+        var response = await ChatService.OpenAiAsync(userKey,ChatState.Messages);
 
-		delayCts.Cancel();
-		await Task.WhenAll(delayedMessageTask, typewriterTask);
+        delayCts.Cancel();
+        await Task.WhenAll(delayedMessageTask, typewriterTask);
 
-		var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
-		var promptToken = response?.Usage?.PromptTokens ?? 0;
-		var completitionToken = response?.Usage?.CompletionTokens ?? 0;
-		var TotalToken = response?.Usage?.TotalTokens ?? 0;
-		ChatState.Messages.Add(new MessageModel
+        var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
+        var promptToken = response?.Usage?.PromptTokens ?? 0;
+        var completitionToken = response?.Usage?.CompletionTokens ?? 0;
+        var TotalToken = response?.Usage?.TotalTokens ?? 0;
+        ChatState.Messages.Add(new MessageModel
 		{
             Role = ChatRoleEnum.Assistant,
 			Content = reply,
 			TokenUsage = new TokenUsageModel { PromptTokens = promptToken, CompletionTokens = completitionToken, TotalTokens = TotalToken }
 		});
-		ChatState.NotifyStateChanged();
-		ChatState.IsThinking = false;
-		showDelayedMessage = false;
-		showTypewriter = false;
-		typewriterText = string.Empty;
-		StateHasChanged();
+        ChatState.NotifyStateChanged();
+        ChatState.IsThinking = false;
+        showDelayedMessage = false;
+        showTypewriter = false;
+        typewriterText = string.Empty;
+        StateHasChanged();
     }
 
     private async Task ShowDelayedMessageAfterThreshold(CancellationToken token)
@@ -234,6 +257,22 @@
         message.Liked = !message.Liked;
     }
 
+    private async Task CopyMessage(MessageModel message)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", message.Content);
+
+        copiedMessage = message;
+        StateHasChanged();
+
+        await Task.Delay(CopiedFeedbackDuration);
+
+        if (copiedMessage == message)
+        {
+            copiedMessage = null;
+            StateHasChanged();
+        }
+    }
+
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
 
@@ -242,5 +281,10 @@
             await Send();
         }
     }
+
+    // protected override void OnInitialized()
+    // {
+    //     ChatState.Messages.Add( new MessageModel { Role = ChatRoleEnum.Assistant, Content = "Hello, How are you man?", Timestamp = DateTime.Now});
+    // }
 
 }
