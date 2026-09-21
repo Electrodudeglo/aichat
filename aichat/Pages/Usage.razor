@@ -1,5 +1,4 @@
 @page "/usage"
-@using aichat.Interfaces
 @inject IChatStateService ChatState
 @implements IDisposable
 
@@ -116,7 +115,6 @@
 
     private int TotalTokens => Usages.Sum(u => u.TotalTokens);
 
-    
     private List<UsageRow> RecentRows => BuildUsageRows(ChatState.Messages).TakeLast(MaxRows).Reverse().ToList();
 
     private static (string Arrow, string Color) GetTrend(int current, int? previous)
