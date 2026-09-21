@@ -2,11 +2,14 @@ namespace aichat.Services
 {
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
+    using System.Text.Json;
     using aichat.Models;
     using aichat.Enums;
 
     public class ChatService
     {
+        private const string ChatModel = "gpt-4-turbo";
+
         private readonly HttpClient _httpClient;
 
         public ChatService(HttpClient httpClient)
@@ -14,11 +17,11 @@ namespace aichat.Services
             _httpClient = httpClient;
         }
 
-        public async Task<ChatCompletionResponse?> OpenAiAsync(string apiKey, IEnumerable<MessageModel> messages)
+        public async Task<ChatCompletionResponse?> SendChatAsync(string apiKey, IEnumerable<MessageModel> messages)
         {
             var body = new
             {
-                model = "gpt-4-turbo",
+                model = ChatModel,
                 messages = messages.Select(m => new ChatCompletionMessage
                 {
                     Role = m.Role == ChatRoleEnum.User ? "user" : "assistant",
@@ -32,9 +35,21 @@ namespace aichat.Services
             };
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
-            var response = await _httpClient.SendAsync(request);
+            try
+            {
+                var response = await _httpClient.SendAsync(request);
 
-            return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>();
+                if (!response.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>();
+            }
+            catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
+            {
+                return null;
+            }
         }
 
         public async Task<bool> IsApiKeyValidAsync(string apiKey)
