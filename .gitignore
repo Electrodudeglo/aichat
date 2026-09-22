@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /aichat/wwwroot/tailwind.css
 .claude/settings.local.json
+/CLEANUP_NOTES.txt
