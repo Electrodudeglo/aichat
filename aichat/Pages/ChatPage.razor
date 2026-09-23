@@ -15,7 +15,7 @@
         </div>
         <div>
             <p class="text-sm font-semibold text-gray-100">AI Assistant</p>
-            <p class="text-xs text-gray-500">Online</p>
+            <p class="text-xs text-gray-500">@(isApiKeyValid ? "Online" : "Offline")</p>
         </div>
     </div>
 
@@ -126,6 +126,8 @@
 
     private string userKey = string.Empty;
 
+    private bool isApiKeyValid = false;
+
     private string input = "";
 
     private string? errorMessage;
@@ -175,6 +177,9 @@
         if (firstRender)
         {
             userKey = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKeys.UserKey) ?? "";
+            StateHasChanged();
+
+            isApiKeyValid = await ChatService.IsApiKeyValidAsync(userKey);
             StateHasChanged();
         }
     }
