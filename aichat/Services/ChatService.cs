@@ -22,7 +22,7 @@ namespace aichat.Services
             var body = new
             {
                 model = ChatModel,
-                messages = messages.Select(m => new ChatCompletionMessage
+                messages = messages.TakeLast(10).Select(m => new ChatCompletionMessage
                 {
                     Role = m.Role == ChatRoleEnum.User ? "user" : "assistant",
                     Content = m.Content
