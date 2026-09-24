@@ -15,9 +15,9 @@
         </div>
         <div>
             <p class="text-sm font-semibold text-gray-100">AI Assistant</p>
-            <div class="flex gap-1 items-center">
-                <p class="text-xs text-gray-500">@(isApiKeyValid ? "Online" : "Offline")</p>
-                <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+            <div class="flex gap-2 items-center">
+                <p class="text-sm text-gray-500">@(isApiKeyValid ? "Online" : "Offline")</p>
+                <span class="@(isApiKeyValid ? "inline-block w-3 h-3 rounded-full bg-green-500" : "inline-block w-3 h-3 rounded-full bg-red-500")"></span>
            </div>
         </div>
     </div>
