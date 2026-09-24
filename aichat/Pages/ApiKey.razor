@@ -1,7 +1,7 @@
 @page "/api-key"
-@using aichat.Services
 @inject IJSRuntime JS
 @inject ChatService ChatService
+@inject IChatStateService ChatState
 
 <PageTitle>API Key</PageTitle>
 
@@ -34,8 +34,6 @@
 
 @code {
 
-    private const string userKeyStorageKey = "user_key";
-
     private string userKey = string.Empty;
     private bool isChecking = false;
     private bool isLocked = false;
@@ -45,7 +43,7 @@
     {
         if (firstRender)
         {
-            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
+            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKeys.UserKey) ?? "";
 
             if (!string.IsNullOrWhiteSpace(userKey))
             {
@@ -64,7 +62,9 @@
             userKey = string.Empty;
             isKeyValid = null;
             isLocked = false;
-            await JS.InvokeVoidAsync("localStorage.removeItem", userKeyStorageKey);
+            ChatState.IsApiKeyValid = null;
+            ChatState.ValidatedKey = null;
+            await JS.InvokeVoidAsync("localStorage.removeItem", StorageKeys.UserKey);
             return;
         }
 
@@ -81,11 +81,13 @@
 
         isChecking = false;
         isKeyValid = valid;
+        ChatState.IsApiKeyValid = valid;
+        ChatState.ValidatedKey = userKey;
 
         if (valid)
         {
             isLocked = true;
-            await JS.InvokeVoidAsync("localStorage.setItem", userKeyStorageKey, userKey);
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKeys.UserKey, userKey);
         }
 
         StateHasChanged();

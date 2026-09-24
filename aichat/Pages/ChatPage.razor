@@ -1,13 +1,11 @@
 @page "/chat"
-@using aichat.Interfaces
-@using aichat.Services
 @using Markdig
-@using aichat.Enums
+@implements IDisposable
 @inject IJSRuntime JS
 @inject IChatStateService ChatState
 @inject ChatService ChatService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Chat</PageTitle>
 
 <div class="flex h-[85vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-2xl">
 
@@ -17,7 +15,10 @@
         </div>
         <div>
             <p class="text-sm font-semibold text-gray-100">AI Assistant</p>
-            <p class="text-xs text-gray-500">Online</p>
+            <div class="flex gap-2 items-center">
+                <p class="text-sm text-gray-500">@(isApiKeyValid ? "Online" : "Offline")</p>
+                <span class="@(isApiKeyValid ? "inline-block w-3 h-3 rounded-full bg-green-500" : "inline-block w-3 h-3 rounded-full bg-red-500")"></span>
+           </div>
         </div>
     </div>
 
@@ -81,7 +82,7 @@
                     </div>
                     @if (showDelayedMessage)
                     {
-                        <span class="text-[10px] text-gray-500 animate-[fadein_0.3s_ease-in]">Thinking harder...</span>
+                        <span class="text-[10px] text-gray-500 animate-[fadein_0.3s_ease-in]">@ThinkingMessage</span>
                     }
                     else if (showTypewriter)
                     {
@@ -98,6 +99,10 @@
             <p class="mb-2 text-center text-xs text-amber-400">
                 Please add an OpenAI API key on the <a href="/api-key" class="underline hover:text-amber-300">API Key page</a> to start chatting.
             </p>
+        }
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p class="mb-2 text-center text-xs text-red-400">@errorMessage</p>
         }
         <div class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 focus-within:border-emerald-500/50">
             <input type="text" @bind="input" @bind:event="oninput" @onkeydown="HandleKeyDown"
@@ -122,11 +127,13 @@
 
     private static string RenderMarkdown(string content) => Markdown.ToHtml(content, MarkdownPipeline);
 
-    private const string userKeyStorageKey = "user_key";
-
     private string userKey = string.Empty;
 
+    private bool isApiKeyValid = false;
+
     private string input = "";
+
+    private string? errorMessage;
 
     private bool showDelayedMessage = false;
 
@@ -148,11 +155,45 @@
 
     private static readonly TimeSpan TypewriterLoopPause = TimeSpan.FromSeconds(1);
 
+    protected override void OnInitialized()
+    {
+        isApiKeyValid = ChatState.IsApiKeyValid == true;
+        ChatState.OnChange += HandleChange;
+    }
+
+    private void HandleChange()
+    {
+        if (ChatState.Messages.Count == 0)
+        {
+            errorMessage = null;
+        }
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ChatState.OnChange -= HandleChange;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", userKeyStorageKey) ?? "";
+            userKey = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKeys.UserKey) ?? "";
+            StateHasChanged();
+
+            if (ChatState.IsApiKeyValid is not null && ChatState.ValidatedKey == userKey)
+            {
+                isApiKeyValid = ChatState.IsApiKeyValid.Value;
+            }
+            else
+            {
+                isApiKeyValid = await ChatService.IsApiKeyValidAsync(userKey);
+                ChatState.IsApiKeyValid = isApiKeyValid;
+                ChatState.ValidatedKey = userKey;
+            }
+
             StateHasChanged();
         }
     }
@@ -164,47 +205,68 @@
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(userKey))
-        {
-            ChatState.Messages.Add(new MessageModel { Role = ChatRoleEnum.Assistant, Content = "Please set your OpenAI API key on the API Key page first." });
-            return;
-        }
-
         var text = input.Trim();
+        var version = ChatState.Version;
 
         ChatState.Messages.Add(new MessageModel { Role = ChatRoleEnum.User, Content = text });
         input = "";
+        errorMessage = null;
         ChatState.IsThinking = true;
-        showDelayedMessage = false;
-        showTypewriter = false;
-        typewriterText = string.Empty;
+        ResetThinkingIndicators();
         StateHasChanged();
 
         using var delayCts = new CancellationTokenSource();
         var delayedMessageTask = ShowDelayedMessageAfterThreshold(delayCts.Token);
         var typewriterTask = StartTypewriterAfterThreshold(delayCts.Token);
 
-        var response = await ChatService.OpenAiAsync(userKey,ChatState.Messages);
+        ChatCompletionResponse? response;
 
-        delayCts.Cancel();
-        await Task.WhenAll(delayedMessageTask, typewriterTask);
+        try
+        {
+            response = await ChatService.SendChatAsync(userKey, ChatState.Messages.ToList());
+        }
+        finally
+        {
+            delayCts.Cancel();
+            await Task.WhenAll(delayedMessageTask, typewriterTask);
+        }
 
-        var reply = response?.Choices.FirstOrDefault()?.Message.Content ?? string.Empty;
-        var promptToken = response?.Usage?.PromptTokens ?? 0;
-        var completitionToken = response?.Usage?.CompletionTokens ?? 0;
-        var TotalToken = response?.Usage?.TotalTokens ?? 0;
-        ChatState.Messages.Add(new MessageModel
-		{
-            Role = ChatRoleEnum.Assistant,
-			Content = reply,
-			TokenUsage = new TokenUsageModel { PromptTokens = promptToken, CompletionTokens = completitionToken, TotalTokens = TotalToken }
-		});
-        ChatState.NotifyStateChanged();
+        if (version != ChatState.Version)
+        {
+            return;
+        }
+
+        var reply = response?.Choices.FirstOrDefault()?.Message.Content;
+
+        if (string.IsNullOrWhiteSpace(reply))
+        {
+            errorMessage = "Something went wrong getting a response. Check your API key and connection, then try again.";
+        }
+        else
+        {
+            ChatState.Messages.Add(new MessageModel
+            {
+                Role = ChatRoleEnum.Assistant,
+                Content = reply,
+                TokenUsage = new TokenUsageModel
+                {
+                    PromptTokens = response?.Usage?.PromptTokens ?? 0,
+                    CompletionTokens = response?.Usage?.CompletionTokens ?? 0,
+                    TotalTokens = response?.Usage?.TotalTokens ?? 0
+                }
+            });
+        }
+
         ChatState.IsThinking = false;
+        ResetThinkingIndicators();
+        ChatState.NotifyStateChanged();
+    }
+
+    private void ResetThinkingIndicators()
+    {
         showDelayedMessage = false;
         showTypewriter = false;
         typewriterText = string.Empty;
-        StateHasChanged();
     }
 
     private async Task ShowDelayedMessageAfterThreshold(CancellationToken token)
@@ -273,7 +335,6 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-
         if (e.Key == "Enter")
         {
             await Send();

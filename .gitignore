@@ -362,3 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /aichat/wwwroot/tailwind.css
+.claude/settings.local.json
+/CLEANUP_NOTES.txt
+/STYLING.txt
