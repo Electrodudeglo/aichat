@@ -157,6 +157,7 @@
 
     protected override void OnInitialized()
     {
+        isApiKeyValid = ChatState.IsApiKeyValid == true;
         ChatState.OnChange += HandleChange;
     }
 
@@ -182,7 +183,17 @@
             userKey = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKeys.UserKey) ?? "";
             StateHasChanged();
 
-            isApiKeyValid = await ChatService.IsApiKeyValidAsync(userKey);
+            if (ChatState.IsApiKeyValid is not null && ChatState.ValidatedKey == userKey)
+            {
+                isApiKeyValid = ChatState.IsApiKeyValid.Value;
+            }
+            else
+            {
+                isApiKeyValid = await ChatService.IsApiKeyValidAsync(userKey);
+                ChatState.IsApiKeyValid = isApiKeyValid;
+                ChatState.ValidatedKey = userKey;
+            }
+
             StateHasChanged();
         }
     }
